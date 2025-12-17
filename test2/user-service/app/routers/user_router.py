@@ -1,11 +1,12 @@
+from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from ..database import get_db
 from ..crud import get_user_by_username
-from ..schemas import UserOut, Token
+from ..schemas import UserOut, Token, ChangePassword
 from ..auth import verify_password, create_access_token, get_current_user, get_password_hash
 from ..models import User
-
+from fastapi import Form
 router = APIRouter(prefix="/users", tags=["users"])
 
 from fastapi import Form
@@ -67,8 +68,8 @@ def read_users_me(current_user: UserOut = Depends(get_current_user)):
 # New Endpoint: Update Profile
 @router.patch("/me", response_model=UserOut)
 def update_profile(
-    username: str = Form(None, description="**New username** (optional, must be unique if changed)"),
-    email: str = Form(None, description="**New email address** (optional, must be valid)"),
+    username: Optional[str] = Form(None, description="**New username** (optional, must be unique if changed)"),
+    email: Optional[str] = Form(None, description="**New email address** (optional, must be valid)"),
     current_user: UserOut = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
@@ -81,7 +82,7 @@ def update_profile(
         raise HTTPException(status_code=404, detail="User not found")
 
     # Update username if provided
-    if username:
+    if username is not None and username != "":
         if username != user.username:  # Only check if changed
             db_user = get_user_by_username(db, username=username)
             if db_user:
@@ -89,11 +90,50 @@ def update_profile(
             user.username = username
 
     # Update email if provided
-    if email:
+    if email is not None and email != "":
         user.email = email
 
     # Save changes
     db.commit()
     db.refresh(user)
 
-    return UserOut.from_attributes(user)
+    return UserOut.model_validate(user)
+
+
+# --- PATCH /change-password ---
+@router.patch("/change-password", response_model=UserOut)
+def change_password(
+    current_password: str = Form(..., description="**Current password** (required for verification)"),
+    new_password: str = Form(..., min_length=8, description="**New password** (minimum 8 characters, English only)"),
+    current_user: UserOut = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Change current user's password (requires current password verification)
+    """
+    # Retrieve the actual user from the database
+    user = get_user_by_username(db, username=current_user.username)
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    # Verify current password (high security!)
+    if not verify_password(current_password, user.hashed_password):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Current password is incorrect"
+        )
+
+    # Check byte length of new password (for bcrypt compatibility)
+    if len(new_password.encode('utf-8')) > 72:
+        raise HTTPException(
+            status_code=400,
+            detail="New password is too long or contains non-English characters. Use only English letters and numbers."
+        )
+
+    # Hash the new password and save it
+    user.hashed_password = get_password_hash(new_password)
+
+    db.commit()
+    db.refresh(user)
+
+    return UserOut.model_validate(user)

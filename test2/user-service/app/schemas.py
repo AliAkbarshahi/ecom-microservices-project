@@ -1,4 +1,5 @@
 from pydantic import BaseModel, ConfigDict, EmailStr, Field
+from typing import Optional
 
 class UserCreate(BaseModel):
     username: str = Field(..., min_length=3, max_length=50)
@@ -23,3 +24,6 @@ class LoginRequest(BaseModel):
     password: str = Field(..., min_length=8, description="Password (minimum 8 characters, English only)")
 
     model_config = ConfigDict(from_attributes=True)
+class ChangePassword(BaseModel):
+    current_password: str = Field(..., min_length=8, description="**Current password** (to verify identity)")
+    new_password: str = Field(..., min_length=8, description="**New password** (minimum 8 characters, English only)")

@@ -7,3 +7,4 @@ python-jose[cryptography]  # برای JWT
 passlib[bcrypt]  # برای hashing پسورد
 python-dotenv  # برای .env
 alembic  # اختیاری برای migration
+pydantic[email]
