@@ -1,0 +1,28 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:16  # آخرین نسخه پایدار
+    restart: always
+    environment:
+      POSTGRES_USER: postgres      # یوزر superadmin
+      POSTGRES_PASSWORD: yourstrongpassword  # پسورد قوی بگذار
+      POSTGRES_DB: user_db         # نام دیتابیس اصلی (برای User Service)
+    ports:
+      - "5432:5432"                # پورت محلی
+    volumes:
+      - postgres_data:/var/lib/postgresql/data  # داده‌ها ذخیره بشن
+
+  pgadmin:  # اختیاری اما عالی برای مدیریت گرافیکی
+    image: dpage/pgadmin4
+    restart: always
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@admin.com
+      PGADMIN_DEFAULT_PASSWORD: adminpassword
+    ports:
+      - "8080:80"
+    depends_on:
+      - db
+
+volumes:
+  postgres_data:
