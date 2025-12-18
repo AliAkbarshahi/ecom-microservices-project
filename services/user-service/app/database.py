@@ -8,6 +8,9 @@ load_dotenv()
 
 SQLALCHEMY_DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://user:password@localhost/user_db")
 
+#SQLALCHEMY_DATABASE_URL = os.getenv("DATABASE_URL","postgresql://postgres:yourstrongpassword@127.0.0.1:5432/user_db")
+
+
 engine = create_engine(SQLALCHEMY_DATABASE_URL)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 

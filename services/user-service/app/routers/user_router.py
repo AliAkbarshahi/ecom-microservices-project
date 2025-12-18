@@ -13,9 +13,9 @@ from fastapi import Form
 
 @router.post("/register", response_model=UserOut)
 def register(
-    username: str = Form(..., description="**Unique username**"),
-    email: str = Form(..., description="**Valid email address**"),
-    password: str = Form(..., min_length=8, description="**Password (minimum 8 characters, English only)**"),
+    username: str = Form(..., description="**Unique username**", examples=[""]),
+    email: str = Form(..., description="**Valid email address**", examples=[""]),
+    password: str = Form(..., min_length=8, description="**Password (minimum 8 characters, English only)**", examples=[""]),
     db: Session = Depends(get_db)
 ):
     # Check password byte length (bcrypt limitation)
@@ -43,8 +43,8 @@ from fastapi import Form
 
 @router.post("/login", response_model=Token)
 def login(
-    username: str = Form(..., description="**Username you chose during registration**"),
-    password: str = Form(..., min_length=8, description="**Password (minimum 8 characters)**"),
+    username: str = Form(..., description="**Username you chose during registration**",  examples=[""]),
+    password: str = Form(..., min_length=8, description="**Password (minimum 8 characters)**",  examples=[""]),
     db: Session = Depends(get_db)
 ):
     """
@@ -68,8 +68,8 @@ def read_users_me(current_user: UserOut = Depends(get_current_user)):
 # New Endpoint: Update Profile
 @router.patch("/me", response_model=UserOut)
 def update_profile(
-    username: Optional[str] = Form(None, description="**New username** (optional, must be unique if changed)"),
-    email: Optional[str] = Form(None, description="**New email address** (optional, must be valid)"),
+    username: Optional[str] = Form(None, description="**New username** (optional, must be unique if changed)", examples=[""]),
+    email: Optional[str] = Form(None, description="**New email address** (optional, must be valid)", examples=[""]),
     current_user: UserOut = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
@@ -103,8 +103,8 @@ def update_profile(
 # --- PATCH /change-password ---
 @router.patch("/change-password", response_model=UserOut)
 def change_password(
-    current_password: str = Form(..., description="**Current password** (required for verification)"),
-    new_password: str = Form(..., min_length=8, description="**New password** (minimum 8 characters, English only)"),
+    current_password: str = Form(..., description="**Current password** (required for verification)", examples=[""]),
+    new_password: str = Form(..., min_length=8, description="**New password** (minimum 8 characters, English only)", examples=[""]),
     current_user: UserOut = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):

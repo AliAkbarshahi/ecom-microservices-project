@@ -1,0 +1,37 @@
+services:
+  db:
+    image: postgres:16  # Latest stable version
+    restart: always
+    environment:
+      POSTGRES_USER: postgres      # Superadmin user
+      POSTGRES_PASSWORD: AkAli12201377  
+      POSTGRES_DB: user_db         # Database name (for User Service)
+    ports:
+      - "5432:5432"                # Local port mapping
+    volumes:
+      - shared_postgres_data:/var/lib/postgresql/data  # Persist data across restarts
+
+  pgadmin:  
+    image: dpage/pgadmin4
+    restart: always
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@admin.com
+      PGADMIN_DEFAULT_PASSWORD: adminpassword
+    ports:
+      - "8080:80"
+    depends_on:
+      - db
+
+  user-service:                    
+    build: ./services/user-service
+    container_name: user-service
+    environment:
+      - DATABASE_URL=postgresql://postgres:AkAli12201377@db:5432/user_db
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db
+    restart: unless-stopped
+
+volumes:
+  shared_postgres_data:             

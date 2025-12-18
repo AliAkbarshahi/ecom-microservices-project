@@ -4,7 +4,7 @@ from .routers import user_router
 
 app = FastAPI(title="User Service")
 
-Base.metadata.create_all(bind=engine)  # جدول‌ها رو بساز
+Base.metadata.create_all(bind=engine)  
 
 app.include_router(user_router.router)
 
