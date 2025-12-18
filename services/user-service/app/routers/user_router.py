@@ -137,3 +137,24 @@ def change_password(
     db.refresh(user)
 
     return UserOut.model_validate(user)
+
+# Delete Account (with current password verification)
+@router.delete("/delete-account", response_model=UserOut)
+def delete_account(
+    current_user: UserOut = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Delete current user's account
+    """
+    user = get_user_by_username(db, username=current_user.username)
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    # Store user data for response before deletion
+    user_data = UserOut.model_validate(user)
+    
+    db.delete(user)
+    db.commit()
+    
+    return user_data
