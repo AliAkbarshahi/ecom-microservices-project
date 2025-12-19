@@ -1,15 +1,13 @@
 from typing import Optional
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Form
 from sqlalchemy.orm import Session
 from ..database import get_db
 from ..crud import get_user_by_username
 from ..schemas import UserOut, Token, ChangePassword
 from ..auth import verify_password, create_access_token, get_current_user, get_password_hash
 from ..models import User
-from fastapi import Form
-router = APIRouter(prefix="/users", tags=["users"])
 
-from fastapi import Form
+router = APIRouter(prefix="/users", tags=["users"])
 
 @router.post("/register", response_model=UserOut)
 def register(
@@ -36,10 +34,17 @@ def register(
     db.add(new_user)
     db.commit()
     db.refresh(new_user)
+    
+    # Ensure is_admin field exists before returning
+    # Use getattr to safely handle if column doesn't exist
+    try:
+        is_admin = getattr(new_user, 'is_admin', False)
+        setattr(new_user, 'is_admin', is_admin)
+    except (AttributeError, KeyError):
+        setattr(new_user, 'is_admin', False)
 
-    return new_user  # or UserOut.from_attributes(new_user)
+    return UserOut.model_validate(new_user)
 
-from fastapi import Form
 
 @router.post("/login", response_model=Token)
 def login(
