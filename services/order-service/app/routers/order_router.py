@@ -63,7 +63,7 @@ def get_orders(
     }
 
 
-@router.get("/{order_id}", response_model=schemas.OrderOut)
+@router.get("/{order_id}",  response_model=List[schemas.OrderOut])
 def get_order(
     order_id: int,
     db: Session = Depends(get_db)
@@ -82,7 +82,7 @@ def get_order(
     return db_order
 
 
-@router.get("/user/{user_id}", response_model=schemas.OrderListResponse)
+@router.get("/user/{user_id}",  response_model=List[schemas.OrderOut])
 def get_user_orders(
     user_id: int,
     skip: int = 0,
