@@ -10,7 +10,7 @@ def create_order(db: Session, user_id: int, items_data: List[dict]) -> Order:
     Args:
         db: Database session
         user_id: ID of the user placing the order
-        items_data: List of order items (product_id, quantity, price)
+        items_data: List of order items (product_id, product_name, quantity, price)
     
     Returns:
         Created Order object with items
@@ -35,6 +35,7 @@ def create_order(db: Session, user_id: int, items_data: List[dict]) -> Order:
         order_item = OrderItem(
             order_id=db_order.id,
             product_id=item_data['product_id'],
+            product_name=item_data['product_name'],
             quantity=item_data['quantity'],
             price=item_data['price']
         )
