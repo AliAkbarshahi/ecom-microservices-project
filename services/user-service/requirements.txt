@@ -26,7 +26,6 @@ python-multipart==0.0.21
 rsa==4.9.1
 six==1.17.0
 SQLAlchemy==2.0.45
-alembic==1.13.2
 starlette==0.50.0
 typing-inspection==0.4.2
 typing_extensions==4.15.0

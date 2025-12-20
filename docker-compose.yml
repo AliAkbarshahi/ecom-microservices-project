@@ -1,3 +1,91 @@
+# services:
+#   user-db:
+#     image: postgres:16
+#     container_name: db
+#     environment:
+#       POSTGRES_USER: postgres
+#       POSTGRES_PASSWORD: AkAli12201377
+#       POSTGRES_DB: user_db
+#     volumes:
+#       - user_db_data:/var/lib/postgresql/data
+#     restart: unless-stopped
+
+#   product-db:
+#     image: postgres:16
+#     container_name: product-db
+#     environment:
+#       POSTGRES_USER: postgres
+#       POSTGRES_PASSWORD: AkAli12201377
+#       POSTGRES_DB: product_db
+#     volumes:
+#       - product_db_data:/var/lib/postgresql/data
+#     restart: unless-stopped
+
+#   # order-db:
+#   #   image: postgres:16
+#   #   container_name: order-db
+#   #   environment:
+#   #     POSTGRES_USER: postgres
+#   #     POSTGRES_PASSWORD: AkAli12201377
+#   #     POSTGRES_DB: order_db
+#   #   volumes:
+#   #     - order_db_data:/var/lib/postgresql/data
+#   #   restart: unless-stopped
+
+#   pgadmin:
+#     image: dpage/pgadmin4
+#     container_name: pgadmin
+#     environment:
+#       PGADMIN_DEFAULT_EMAIL: admin@admin.com
+#       PGADMIN_DEFAULT_PASSWORD: adminpassword
+#     ports:
+#       - "8080:80"
+#     depends_on:
+#       - user-db
+#       - product-db
+#       # - order-db
+#     restart: unless-stopped
+
+#   user-service:
+#     build: ./services/user-service
+#     container_name: user-service
+#     environment:
+#       - DATABASE_URL=postgresql://postgres:AkAli12201377@user-db:5432/user_db
+#     ports:
+#       - "8000:8000"
+#     depends_on:
+#       - user-db
+#     restart: unless-stopped
+
+#   product-service:
+#     build: ./services/product-service
+#     container_name: product-service
+#     environment:
+#       - DATABASE_URL=postgresql://postgres:AkAli12201377@product-db:5432/product_db
+#     ports:
+#       - "8001:8000"
+#     depends_on:
+#       - product-db
+#     restart: unless-stopped
+
+#   # order-service:
+#   #   build: ./services/order-service
+#   #   container_name: order-service
+#   #   environment:
+#   #     - DATABASE_URL=postgresql://postgres:AkAli12201377@order-db:5432/order_db
+#   #   ports:
+#   #     - "8002:8000"
+#   #   depends_on:
+#   #     - order-db
+#   #     - user-service      
+#   #     - product-service   
+#   #   restart: unless-stopped
+
+# volumes:
+#   user_db_data:
+#   product_db_data:
+#   # order_db_data:
+
 services:
   user-db:
     image: postgres:16
@@ -21,16 +109,16 @@ services:
       - product_db_data:/var/lib/postgresql/data
     restart: unless-stopped
 
-  # order-db:
-  #   image: postgres:16
-  #   container_name: order-db
-  #   environment:
-  #     POSTGRES_USER: postgres
-  #     POSTGRES_PASSWORD: AkAli12201377
-  #     POSTGRES_DB: order_db
-  #   volumes:
-  #     - order_db_data:/var/lib/postgresql/data
-  #   restart: unless-stopped
+  order-db:
+    image: postgres:16
+    container_name: order-db
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: AkAli12201377
+      POSTGRES_DB: order_db
+    volumes:
+      - order_db_data:/var/lib/postgresql/data
+    restart: unless-stopped
 
   pgadmin:
     image: dpage/pgadmin4
@@ -43,7 +131,7 @@ services:
     depends_on:
       - user-db
       - product-db
-      # - order-db
+      - order-db
     restart: unless-stopped
 
   user-service:
@@ -68,20 +156,22 @@ services:
       - product-db
     restart: unless-stopped
 
-  # order-service:
-  #   build: ./services/order-service
-  #   container_name: order-service
-  #   environment:
-  #     - DATABASE_URL=postgresql://postgres:AkAli12201377@order-db:5432/order_db
-  #   ports:
-  #     - "8002:8000"
-  #   depends_on:
-  #     - order-db
-  #     - user-service      
-  #     - product-service   
-  #   restart: unless-stopped
+  order-service:
+    build: ./services/order-service
+    container_name: order-service
+    environment:
+      - DATABASE_URL=postgresql://postgres:AkAli12201377@order-db:5432/order_db
+      - PRODUCT_SERVICE_URL=http://product-service:8000
+      - PAYMENT_SERVICE_URL=http://payment-service:8000
+    ports:
+      - "8002:8000"
+    depends_on:
+      - order-db
+      - user-service      
+      - product-service   
+    restart: unless-stopped
 
 volumes:
   user_db_data:
   product_db_data:
-  # order_db_data:
+  order_db_data:

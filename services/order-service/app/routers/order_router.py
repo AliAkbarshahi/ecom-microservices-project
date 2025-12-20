@@ -6,8 +6,8 @@ from .. import schemas, crud
 from ..database import get_db
 
 router = APIRouter(
-    prefix="/api/orders",
-    tags=["orders"]
+    prefix="/orders",
+    tags=["Order Service"]
 )
 
 

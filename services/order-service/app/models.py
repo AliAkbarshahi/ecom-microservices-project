@@ -1,4 +1,3 @@
-
 from sqlalchemy import Column, Integer, String, Numeric, ForeignKey, DateTime
 from sqlalchemy.orm import declarative_base, relationship
 from sqlalchemy.sql import func
@@ -11,7 +10,7 @@ class Order(Base):
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer, nullable=False, index=True)
     total_amount = Column(Numeric(10, 2), nullable=False, default=0)
-    status = Column(String(20), nullable=False, default="pending", index=True)
+    status = Column(String(50), nullable=False, default="pending", index=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
     
