@@ -15,9 +15,7 @@ app.include_router(admin_router.router)
 
 
 def init_admin_user():
-    """
-    Initialize admin user if it doesn't exist
-    """
+   
     db = SessionLocal()
     try:
         admin_user = get_user_by_username(db, username="admin")

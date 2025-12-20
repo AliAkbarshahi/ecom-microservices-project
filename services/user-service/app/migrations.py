@@ -1,14 +1,9 @@
-"""
-Migration script to add is_admin column to users table
-"""
 from sqlalchemy import text
 from .database import engine
 
 
 def add_is_admin_column():
-    """
-    Add is_admin column to users table if it doesn't exist
-    """
+   
     with engine.begin() as connection:
         try:
             # Check if column exists

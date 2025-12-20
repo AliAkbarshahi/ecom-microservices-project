@@ -14,7 +14,7 @@ app = FastAPI(
 # Configure CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # In production, specify actual origins
+    allow_origins=["*"],  
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -29,9 +29,7 @@ app.include_router(order_router.router)
 
 @app.get("/")
 def root():
-    """
-    Root endpoint - Health check
-    """
+   
     return {
         "service": "Order Service",
         "status": "running",
@@ -41,9 +39,7 @@ def root():
 
 @app.get("/health")
 def health_check():
-    """
-    Health check endpoint for monitoring
-    """
+  
     return {
         "status": "healthy",
         "service": "order-service"

@@ -161,8 +161,10 @@ services:
     container_name: order-service
     environment:
       - DATABASE_URL=postgresql://postgres:AkAli12201377@order-db:5432/order_db
+      - USER_SERVICE_URL=http://user-service:8000
       - PRODUCT_SERVICE_URL=http://product-service:8000
       - PAYMENT_SERVICE_URL=http://payment-service:8000
+      - SECRET_KEY=8f3b9e7a2c4d1f5e6a8b0c9d3e7f2a1b4c6d8e9f0a5b7c2d1e3f4a6b8c9d0e1f2
     ports:
       - "8002:8000"
     depends_on:

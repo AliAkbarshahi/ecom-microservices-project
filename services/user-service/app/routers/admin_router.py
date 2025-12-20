@@ -16,9 +16,7 @@ def admin_login(
     password: str = Form(..., description="**Admin password**", examples=["admin"]),
     db: Session = Depends(get_db)
 ):
-    """
-    Admin login endpoint
-    """
+    
     user = get_user_by_username(db, username=username)
     if not user:
         raise HTTPException(
@@ -27,16 +25,14 @@ def admin_login(
             headers={"WWW-Authenticate": "Bearer"},
         )
     
-    # Check if user is admin - safely handle if column doesn't exist
-    # get_user_by_username already ensures is_admin field exists, but we double-check
+   
     try:
         is_admin = getattr(user, 'is_admin', False)
-        # Also check username for admin user
+        # check username for admin user
         if user.username == 'admin' and not is_admin:
             is_admin = True
             setattr(user, 'is_admin', True)
     except (AttributeError, KeyError):
-        # Column doesn't exist, check username
         is_admin = (user.username == 'admin')
         setattr(user, 'is_admin', is_admin)
     
@@ -65,9 +61,7 @@ def list_all_users(
     current_admin: UserOut = Depends(get_current_admin),
     db: Session = Depends(get_db)
 ):
-    """
-    Get list of all users (Admin only)
-    """
+    
     users = get_all_users(db, skip=skip, limit=limit)
     return [UserOut.model_validate(user) for user in users]
 
@@ -78,14 +72,10 @@ def delete_user_by_admin(
     current_admin: UserOut = Depends(get_current_admin),
     db: Session = Depends(get_db)
 ):
-    """
-    Delete a user by ID (Admin only)
-    """
     user = get_user_by_id(db, user_id)
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
     
-    # Prevent admin from deleting themselves
     if user.id == current_admin.id:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,

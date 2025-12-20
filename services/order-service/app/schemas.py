@@ -21,12 +21,19 @@ class OrderItemBase(BaseModel):
     quantity: int = Field(..., gt=0, description="Product quantity")
     price: Decimal = Field(..., gt=0, description="Unit price of product")
 
-class OrderItemCreate(OrderItemBase):
-    pass
+class OrderItemCreate(BaseModel):
+  
+    product_id: int = Field(..., gt=0, description="Product ID")
+    quantity: int = Field(..., gt=0, description="Product quantity")
 
-class OrderItemOut(OrderItemBase):
+class OrderItemOut(BaseModel):
+   
     id: int
     order_id: int
+    product_id: int
+    product_name: str
+    quantity: int
+    price: Decimal
     
     model_config = {"from_attributes": True}
 
@@ -36,7 +43,7 @@ class OrderBase(BaseModel):
     user_id: int = Field(..., gt=0, description="User-id")
 
 class OrderCreate(BaseModel):
-    user_id: int = Field(..., gt=0)
+    
     items: List[OrderItemCreate] = Field(..., min_length=1, description="List of order items")
 
 class OrderUpdate(BaseModel):
