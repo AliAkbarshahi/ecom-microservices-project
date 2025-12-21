@@ -4,21 +4,7 @@ from .models import Order, OrderItem
 from typing import List, Optional
 
 def create_order(db: Session, user_id: int, items_data: List[dict]) -> Order:
-<<<<<<< HEAD
-    """
-    Create a new order with its items
-    
-    Args:
-        db: Database session
-        user_id: ID of the user placing the order
-        items_data: List of order items (product_id, product_name, quantity, price)
-    
-    Returns:
-        Created Order object with items
-    """
-=======
    
->>>>>>> fdbe25c0d9d4e2484f4657400bb0089ba83c335d
     # Calculate total amount
     total_amount = sum(
         Decimal(str(item['price'])) * item['quantity'] 

@@ -23,19 +23,6 @@ def create_order(
     db: Session = Depends(get_db)
 ):
     
-<<<<<<< HEAD
-    - **Authorization**: Bearer token (required)
-    - **items**: List of products with product_id and quantity
-    
-    The service will:
-    1. Extract user_id from the token
-    2. Get product information (name, price, stock) from product service
-    3. Check stock availability
-    4. Update product stock
-    5. Create order with product names
-    """
-=======
->>>>>>> fdbe25c0d9d4e2484f4657400bb0089ba83c335d
     try:
         # Extract token from credentials
         token = credentials.credentials

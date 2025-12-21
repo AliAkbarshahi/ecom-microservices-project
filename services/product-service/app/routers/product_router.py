@@ -8,7 +8,7 @@ from  ..schemas import ProductOut
 router = APIRouter(prefix="/products", tags=["Product Service"])
 
 @router.post("/", response_model=ProductOut, status_code=201)
-def create_product_endpoint(
+def Create_Products_Only_Admin(
     name: str = Form(..., description="**Product name** (required)", examples=[""]),
     description: Optional[str] = Form(None, description="**Description** (optional)", examples=[""]),
     price: float = Form(..., gt=0, description="**Price** (must be greater than 0)", examples=[""]),
@@ -27,7 +27,7 @@ def create_product_endpoint(
 
 
 @router.get("/", response_model=list[ProductOut])
-def read_products(
+def View_Products_Only_Admin(
     skip: int = Query(0, ge=0, description="**Skip** number of products", examples=[""]),
     limit: int = Query(100, ge=1, le=1000, description="**Limit** number of products", examples=[""]),
     search: Optional[str] = Query(None, description="**Search** in name, description, or category", examples=[""]),
@@ -37,7 +37,7 @@ def read_products(
 
 
 @router.get("/{product_id}", response_model=ProductOut)
-def read_product(product_id: int, db: Session = Depends(get_db)):
+def View_Product(product_id: int, db: Session = Depends(get_db)):
     product = get_product(db, product_id)
     if not product:
         raise HTTPException(status_code=404, detail="Product not found")
@@ -45,7 +45,7 @@ def read_product(product_id: int, db: Session = Depends(get_db)):
 
 
 @router.patch("/{product_id}", response_model=ProductOut)
-def update_product_endpoint(
+def Update_Product_Only_Admin(
     product_id: int,
     name: Optional[str] = Form(None, description="**New name** (optional)", examples=[""]),
     description: Optional[str] = Form(None, description="**New description** (optional)", examples=[""]),
@@ -70,7 +70,7 @@ def update_product_endpoint(
 
 
 @router.delete("/{product_id}", response_model=ProductOut)
-def delete_product_endpoint(product_id: int, db: Session = Depends(get_db)):
+def Delete_Product_Only_Admin(product_id: int, db: Session = Depends(get_db)):
     product = delete_product(db, product_id)
     if not product:
         raise HTTPException(status_code=404, detail="Product not found")

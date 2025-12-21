@@ -22,20 +22,12 @@ class OrderItemBase(BaseModel):
     price: Decimal = Field(..., gt=0, description="Unit price of product")
 
 class OrderItemCreate(BaseModel):
-<<<<<<< HEAD
-    """Schema for creating order items - only product_id and quantity needed"""
-=======
   
->>>>>>> fdbe25c0d9d4e2484f4657400bb0089ba83c335d
     product_id: int = Field(..., gt=0, description="Product ID")
     quantity: int = Field(..., gt=0, description="Product quantity")
 
 class OrderItemOut(BaseModel):
-<<<<<<< HEAD
-    """Schema for order item output - includes product name"""
-=======
    
->>>>>>> fdbe25c0d9d4e2484f4657400bb0089ba83c335d
     id: int
     order_id: int
     product_id: int
@@ -51,11 +43,7 @@ class OrderBase(BaseModel):
     user_id: int = Field(..., gt=0, description="User-id")
 
 class OrderCreate(BaseModel):
-<<<<<<< HEAD
-    """Schema for creating order - user_id will be extracted from token"""
-=======
     
->>>>>>> fdbe25c0d9d4e2484f4657400bb0089ba83c335d
     items: List[OrderItemCreate] = Field(..., min_length=1, description="List of order items")
 
 class OrderUpdate(BaseModel):
