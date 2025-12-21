@@ -57,8 +57,7 @@ async def get_current_user(credentials: str = Depends(oauth2_scheme), db: Sessio
     if user is None:
         raise credentials_exception
     
-    # Ensure is_admin field exists before creating UserOut
-    # get_user_by_username already handles this, but we double-check here
+   
     try:
         is_admin = getattr(user, 'is_admin', False)
         if user.username == 'admin' and not is_admin:
@@ -74,12 +73,10 @@ async def get_current_admin(
     current_user: "UserOut" = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    """
-    Dependency to check if current user is an admin
-    """
+    
     # Safely get is_admin field, defaulting to False
     is_admin = getattr(current_user, 'is_admin', False)
-    # Also check username for admin user
+    # check username for admin user
     if hasattr(current_user, 'username') and current_user.username == 'admin':
         is_admin = True
     

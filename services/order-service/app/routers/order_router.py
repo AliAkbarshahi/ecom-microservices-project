@@ -22,9 +22,8 @@ def create_order(
     credentials: HTTPAuthorizationCredentials = Depends(security),
     db: Session = Depends(get_db)
 ):
-    """
-    Create a new order
     
+<<<<<<< HEAD
     - **Authorization**: Bearer token (required)
     - **items**: List of products with product_id and quantity
     
@@ -35,6 +34,8 @@ def create_order(
     4. Update product stock
     5. Create order with product names
     """
+=======
+>>>>>>> fdbe25c0d9d4e2484f4657400bb0089ba83c335d
     try:
         # Extract token from credentials
         token = credentials.credentials
@@ -90,12 +91,7 @@ def get_orders(
     limit: int = 100,
     db: Session = Depends(get_db)
 ):
-    """
-    Get list of all orders with pagination
     
-    - **skip**: Number of records to skip (default: 0)
-    - **limit**: Maximum number of records to return (default: 100)
-    """
     orders = crud.get_orders(db=db, skip=skip, limit=limit)
     total = crud.get_order_count(db=db)
     
@@ -112,11 +108,7 @@ def get_order(
     order_id: int,
     db: Session = Depends(get_db)
 ):
-    """
-    Get a specific order by ID
     
-    - **order_id**: ID of the order
-    """
     db_order = crud.get_order(db=db, order_id=order_id)
     if not db_order:
         raise HTTPException(
@@ -133,13 +125,7 @@ def get_user_orders(
     limit: int = 100,
     db: Session = Depends(get_db)
 ):
-    """
-    Get all orders for a specific user
     
-    - **user_id**: ID of the user
-    - **skip**: Number of records to skip (default: 0)
-    - **limit**: Maximum number of records to return (default: 100)
-    """
     orders = crud.get_orders_by_user(db=db, user_id=user_id, skip=skip, limit=limit)
     total = crud.get_user_order_count(db=db, user_id=user_id)
     
@@ -157,12 +143,7 @@ def update_order_status(
     status_update: schemas.OrderUpdate,
     db: Session = Depends(get_db)
 ):
-    """
-    Update the status of an order
     
-    - **order_id**: ID of the order
-    - **status**: New status value (pending, confirmed, processing, shipped, delivered, cancelled, failed)
-    """
     db_order = crud.update_order_status(
         db=db,
         order_id=order_id,
@@ -183,11 +164,7 @@ def delete_order(
     order_id: int,
     db: Session = Depends(get_db)
 ):
-    """
-    Delete an order
     
-    - **order_id**: ID of the order to delete
-    """
     db_order = crud.delete_order(db=db, order_id=order_id)
     
     if not db_order:

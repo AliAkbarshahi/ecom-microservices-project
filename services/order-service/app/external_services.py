@@ -9,16 +9,23 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+<<<<<<< HEAD
 # Service URLs from environment variables or defaults
 USER_SERVICE_URL = os.getenv("USER_SERVICE_URL", "http://user-service:8000")
 PRODUCT_SERVICE_URL = os.getenv("PRODUCT_SERVICE_URL", "http://product-service:8000")
 
 # Shared SECRET_KEY for token validation (should match user-service)
+=======
+USER_SERVICE_URL = os.getenv("USER_SERVICE_URL", "http://user-service:8000")
+PRODUCT_SERVICE_URL = os.getenv("PRODUCT_SERVICE_URL", "http://product-service:8000")
+
+>>>>>>> fdbe25c0d9d4e2484f4657400bb0089ba83c335d
 SECRET_KEY = os.getenv("SECRET_KEY", "8f3b9e7a2c4d1f5e6a8b0c9d3e7f2a1b4c6d8e9f0a5b7c2d1e3f4a6b8c9d0e1f2")
 ALGORITHM = "HS256"
 
 
 def get_user_id_from_token(token: str) -> int:
+<<<<<<< HEAD
     """
     Get user ID from JWT token by calling user service
     
@@ -36,6 +43,12 @@ def get_user_id_from_token(token: str) -> int:
         # URL encode the endpoint path to handle spaces in "my profile"
         headers = {"Authorization": f"Bearer {token}"}
         # Replace space with %20 for URL encoding
+=======
+    
+    try:
+       
+        headers = {"Authorization": f"Bearer {token}"}
+>>>>>>> fdbe25c0d9d4e2484f4657400bb0089ba83c335d
         endpoint = "/users/my profile".replace(" ", "%20")
         response = requests.get(
             f"{USER_SERVICE_URL}{endpoint}",
@@ -64,6 +77,7 @@ def get_user_id_from_token(token: str) -> int:
 
 
 def get_product_info(product_id: int) -> Dict:
+<<<<<<< HEAD
     """
     Get product information from product service
     
@@ -76,6 +90,9 @@ def get_product_info(product_id: int) -> Dict:
     Raises:
         HTTPException: If product not found or service unavailable
     """
+=======
+ 
+>>>>>>> fdbe25c0d9d4e2484f4657400bb0089ba83c335d
     try:
         response = requests.get(
             f"{PRODUCT_SERVICE_URL}/products/{product_id}",
@@ -108,6 +125,7 @@ def get_product_info(product_id: int) -> Dict:
 
 
 def update_product_stock(product_id: int, quantity_to_subtract: int) -> bool:
+<<<<<<< HEAD
     """
     Update product stock by subtracting the ordered quantity
     
@@ -121,6 +139,9 @@ def update_product_stock(product_id: int, quantity_to_subtract: int) -> bool:
     Raises:
         HTTPException: If update fails or service unavailable
     """
+=======
+   
+>>>>>>> fdbe25c0d9d4e2484f4657400bb0089ba83c335d
     try:
         # First get current product info
         product_info = get_product_info(product_id)

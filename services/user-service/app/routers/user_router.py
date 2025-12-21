@@ -35,8 +35,7 @@ def register(
     db.commit()
     db.refresh(new_user)
     
-    # Ensure is_admin field exists before returning
-    # Use getattr to safely handle if column doesn't exist
+  
     try:
         is_admin = getattr(new_user, 'is_admin', False)
         setattr(new_user, 'is_admin', is_admin)
@@ -52,9 +51,7 @@ def login(
     password: str = Form(..., min_length=8, description="**Password (minimum 8 characters)**",  examples=[""]),
     db: Session = Depends(get_db)
 ):
-    """
-    User login endpoint
-    """
+    
     user = get_user_by_username(db, username=username)
     if not user or not verify_password(password, user.hashed_password):
         raise HTTPException(
@@ -70,7 +67,6 @@ def login(
 def read_users_me(current_user: UserOut = Depends(get_current_user)):
     return current_user
 
-# New Endpoint: Update Profile
 @router.patch("/me", response_model=UserOut)
 def update_profile(
     username: Optional[str] = Form(None, description="**New username** (optional, must be unique if changed)", examples=[""]),
@@ -78,9 +74,7 @@ def update_profile(
     current_user: UserOut = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    """
-    Update current user's profile
-    """
+   
     # Get the actual user model from DB
     user = get_user_by_username(db, username=current_user.username)
     if not user:
@@ -105,7 +99,6 @@ def update_profile(
     return UserOut.model_validate(user)
 
 
-# --- PATCH /change-password ---
 @router.patch("/change-password", response_model=UserOut)
 def change_password(
     current_password: str = Form(..., description="**Current password** (required for verification)", examples=[""]),
@@ -113,22 +106,18 @@ def change_password(
     current_user: UserOut = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    """
-    Change current user's password (requires current password verification)
-    """
+    
     # Retrieve the actual user from the database
     user = get_user_by_username(db, username=current_user.username)
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
 
-    # Verify current password (high security!)
     if not verify_password(current_password, user.hashed_password):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Current password is incorrect"
         )
 
-    # Check byte length of new password (for bcrypt compatibility)
     if len(new_password.encode('utf-8')) > 72:
         raise HTTPException(
             status_code=400,
@@ -149,9 +138,7 @@ def delete_account(
     current_user: UserOut = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    """
-    Delete current user's account
-    """
+   
     user = get_user_by_username(db, username=current_user.username)
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
