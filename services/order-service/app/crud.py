@@ -63,6 +63,20 @@ def update_order_status(db: Session, order_id: int, new_status: str) -> Optional
     return db_order
 
 
+def mark_order_paid(db: Session, order_id: int) -> Optional[Order]:
+   
+    db_order = get_order(db, order_id)
+    if not db_order:
+        return None
+
+    db_order.payment_status = True
+    # keep your existing status enum values
+    db_order.status = "confirmed"
+    db.commit()
+    db.refresh(db_order)
+    return db_order
+
+
 def delete_order(db: Session, order_id: int) -> Optional[Order]:
     
     db_order = get_order(db, order_id)

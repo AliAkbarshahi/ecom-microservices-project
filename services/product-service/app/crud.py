@@ -42,3 +42,59 @@ def delete_product(db: Session, product_id: int):
         db.delete(db_product)
         db.commit()
     return db_product
+
+
+def decrease_stock(db: Session, product_id: int, quantity: int) -> Product | None:
+ 
+    if quantity <= 0:
+        raise ValueError("quantity must be > 0")
+
+    product = (
+        db.query(Product)
+        .filter(Product.id == product_id)
+        .with_for_update()
+        .first()
+    )
+    if not product:
+        return None
+
+    if product.stock < quantity:
+        raise ValueError("insufficient_stock")
+
+    product.stock -= quantity
+    db.commit()
+    db.refresh(product)
+    return product
+
+
+def decrease_stock_batch(db: Session, items: list[dict]) -> None:
+    
+    # Merge duplicate product_ids
+    merged: dict[int, int] = {}
+    for item in items:
+        pid = int(item["product_id"])
+        qty = int(item["quantity"])
+        if qty <= 0:
+            raise ValueError("quantity must be > 0")
+        merged[pid] = merged.get(pid, 0) + qty
+
+    try:
+        # Lock rows in a stable order to avoid deadlocks
+        for pid in sorted(merged.keys()):
+            qty = merged[pid]
+            product = (
+                db.query(Product)
+                .filter(Product.id == pid)
+                .with_for_update()
+                .first()
+            )
+            if not product:
+                raise ValueError(f"product_not_found:{pid}")
+            if product.stock < qty:
+                raise ValueError(f"insufficient_stock:{pid}")
+            product.stock -= qty
+
+        db.commit()
+    except Exception:
+        db.rollback()
+        raise

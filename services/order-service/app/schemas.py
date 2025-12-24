@@ -54,6 +54,7 @@ class OrderOut(BaseModel):
     user_id: int
     total_amount: Decimal
     status: OrderStatus
+    payment_status: bool = False
     created_at: datetime
     updated_at: Optional[datetime] = None
     items: List[OrderItemOut] = []

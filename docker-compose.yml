@@ -152,6 +152,17 @@ services:
       RABBITMQ_DEFAULT_PASS: admin123
     restart: unless-stopped
 
+  payment-service:
+    build: ./services/payment-service
+    container_name: payment-service
+    environment:
+      - RABBITMQ_URL=amqp://admin:admin123@rabbitmq:5672/
+    ports:
+      - "8003:8000"
+    depends_on:
+      - rabbitmq
+    restart: unless-stopped
+
   user-service:
     build: ./services/user-service
     container_name: user-service
@@ -194,6 +205,7 @@ services:
       - user-service
       - product-service
       - rabbitmq
+      - payment-service
     restart: unless-stopped
 
 volumes:
