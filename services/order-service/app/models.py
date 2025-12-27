@@ -12,6 +12,8 @@ class Order(Base):
     total_amount = Column(Numeric(10, 2), nullable=False, default=0)
     status = Column(String(50), nullable=False, default="pending", index=True)
     payment_status = Column(Boolean, nullable=False, default=False, index=True)
+    # When user clicks "checkout", we reserve stock for a short TTL and set this deadline.
+    checkout_expires_at = Column(DateTime(timezone=True), nullable=True, index=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
     

@@ -157,6 +157,8 @@ services:
     container_name: payment-service
     environment:
       - RABBITMQ_URL=amqp://admin:admin123@rabbitmq:5672/
+      - USER_SERVICE_URL=http://user-service:8000
+      - ORDER_SERVICE_URL=http://order-service:8000
     ports:
       - "8003:8000"
     depends_on:

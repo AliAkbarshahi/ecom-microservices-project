@@ -115,3 +115,39 @@ def update_product_stock(product_id: int, quantity_to_subtract: int) -> bool:
             detail=f"Product service is unavailable: {str(e)}"
         )
 
+
+def reserve_stock_for_order(*, order_id: int, user_id: int, items: list[dict], ttl_seconds: int = 60) -> dict:
+    """Ask product-service to reserve stock for a short window."""
+    try:
+        resp = requests.post(
+            f"{PRODUCT_SERVICE_URL}/products/reservations",
+            json={
+                "order_id": int(order_id),
+                "user_id": int(user_id),
+                "ttl_seconds": int(ttl_seconds),
+                "items": [{"product_id": int(i["product_id"]), "quantity": int(i["quantity"])} for i in items],
+            },
+            timeout=5,
+        )
+        if resp.status_code == 200:
+            return resp.json()
+        if resp.status_code == 404:
+            raise HTTPException(status_code=404, detail=resp.json())
+        if resp.status_code == 400:
+            raise HTTPException(status_code=400, detail=resp.json())
+        raise HTTPException(status_code=500, detail=f"Failed to reserve stock: {resp.text}")
+    except requests.exceptions.RequestException as e:
+        raise HTTPException(status_code=503, detail=f"Product service is unavailable: {str(e)}")
+
+
+def release_stock_reservation(*, order_id: int) -> None:
+    """Best-effort release of reservations for an order."""
+    try:
+        requests.post(
+            f"{PRODUCT_SERVICE_URL}/products/reservations/{int(order_id)}/release",
+            timeout=5,
+        )
+    except requests.exceptions.RequestException:
+        # best-effort; ignore
+        return
+

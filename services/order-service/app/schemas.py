@@ -8,6 +8,7 @@ from enum import Enum
 # Define order status enum
 class OrderStatus(str, Enum):
     PENDING = "pending"
+    CHECKOUT_PENDING = "checkout_pending"
     CONFIRMED = "confirmed"
     PROCESSING = "processing"
     SHIPPED = "shipped"
@@ -49,12 +50,31 @@ class OrderCreate(BaseModel):
 class OrderUpdate(BaseModel):
     status: Optional[OrderStatus] = None
 
+
+# -----------------------------
+# Cart ("pending" order) update
+# -----------------------------
+class CartItemUpdate(BaseModel):
+    """Update the quantity of a product inside the user's active cart.
+
+    - quantity > 0  => set/update quantity
+    - quantity == 0 => remove item from cart
+    """
+
+    product_id: int = Field(..., gt=0, description="Product ID")
+    quantity: int = Field(..., ge=0, description="New quantity (0 removes the item)")
+
+
+class CartUpdate(BaseModel):
+    items: List[CartItemUpdate] = Field(..., min_length=1, description="Items to update in the active cart")
+
 class OrderOut(BaseModel):
     id: int
     user_id: int
     total_amount: Decimal
     status: OrderStatus
     payment_status: bool = False
+    checkout_expires_at: Optional[datetime] = None
     created_at: datetime
     updated_at: Optional[datetime] = None
     items: List[OrderItemOut] = []

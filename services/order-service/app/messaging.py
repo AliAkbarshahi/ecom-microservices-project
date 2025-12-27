@@ -2,9 +2,12 @@ from __future__ import annotations
 
 import json
 import os
+import sys
 import threading
 import time
 from typing import Callable, Iterable, Optional
+
+import traceback
 
 import pika
 
@@ -68,6 +71,15 @@ def start_consumer_in_thread(
                         handler(payload)
                         ch_.basic_ack(delivery_tag=method.delivery_tag)
                     except Exception:
+                        # Log the failure so issues don't silently drop messages.
+                        try:
+                            print(
+                                f"[order-service] consumer handler failed. queue={queue_name}",
+                                file=sys.stderr,
+                            )
+                            traceback.print_exc()
+                        except Exception:
+                            pass
                         # If your handler failed, you can choose to requeue.
                         # For now, we DON'T requeue to avoid infinite poison-message loops.
                         ch_.basic_nack(delivery_tag=method.delivery_tag, requeue=False)

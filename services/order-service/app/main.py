@@ -4,7 +4,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from .routers import order_router
 from .models import Base
 from .database import engine
-from .payment_consumer import start_payment_succeeded_consumer
+from .payment_consumer import start_payment_consumers
 
 app = FastAPI(
     title="Order Service",
@@ -31,7 +31,7 @@ app.include_router(order_router.router)
 @app.on_event("startup")
 def _startup() -> None:
     # Start background consumer for payment.succeeded
-    start_payment_succeeded_consumer()
+    start_payment_consumers()
 
 
 @app.get("/")

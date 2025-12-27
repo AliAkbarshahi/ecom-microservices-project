@@ -1,6 +1,10 @@
+import datetime as dt
+from typing import Any
+
 from sqlalchemy.orm import Session
 from sqlalchemy import or_, func
-from .models import Product
+
+from .models import Product, StockReservation
 
 def get_product_by_name(db: Session, name: str):
     normalized = (name or "").strip()
@@ -137,3 +141,119 @@ def decrease_stock_batch(db: Session, items: list[dict]) -> None:
     except Exception:
         db.rollback()
         raise
+
+
+# -----------------------------
+# Reservations (checkout hold)
+# -----------------------------
+
+def purge_expired_reservations(db: Session) -> int:
+    """Delete expired reservations and return deleted rows count."""
+    now = dt.datetime.now(dt.timezone.utc)
+    q = db.query(StockReservation).filter(StockReservation.expires_at <= now)
+    deleted = q.delete(synchronize_session=False)
+    db.commit()
+    return int(deleted or 0)
+
+
+def _reserved_qty_for_product(db: Session, product_id: int, *, now: dt.datetime, exclude_order_id: int | None = None) -> int:
+    q = db.query(func.coalesce(func.sum(StockReservation.quantity), 0)).filter(
+        StockReservation.product_id == product_id,
+        StockReservation.expires_at > now,
+    )
+    if exclude_order_id is not None:
+        q = q.filter(StockReservation.order_id != exclude_order_id)
+    return int(q.scalar() or 0)
+
+
+def create_reservations(
+    db: Session,
+    *,
+    order_id: int,
+    user_id: int,
+    items: list[dict[str, Any]],
+    ttl_seconds: int = 60,
+) -> dt.datetime:
+    """Reserve stock for an order for ttl_seconds.
+
+    items: [{"product_id": int, "quantity": int}, ...]
+    Returns: reserved_until (UTC datetime)
+    """
+    if ttl_seconds <= 0:
+        ttl_seconds = 60
+
+    now = dt.datetime.now(dt.timezone.utc)
+    reserved_until = now + dt.timedelta(seconds=ttl_seconds)
+
+    # Purge expired and clear any existing reservations for this order (retry checkout)
+    db.query(StockReservation).filter(StockReservation.expires_at <= now).delete(synchronize_session=False)
+    db.query(StockReservation).filter(StockReservation.order_id == order_id).delete(synchronize_session=False)
+    db.flush()
+
+    # Merge duplicates
+    merged: dict[int, int] = {}
+    for it in items:
+        pid = int(it["product_id"])
+        qty = int(it["quantity"])
+        if qty <= 0:
+            raise ValueError("quantity must be > 0")
+        merged[pid] = merged.get(pid, 0) + qty
+
+    try:
+        # Lock products in stable order and validate availability
+        for pid in sorted(merged.keys()):
+            qty = merged[pid]
+            product = (
+                db.query(Product)
+                .filter(Product.id == pid)
+                .with_for_update()
+                .first()
+            )
+            if not product:
+                raise ValueError(f"product_not_found:{pid}")
+
+            reserved_qty = _reserved_qty_for_product(db, pid, now=now, exclude_order_id=order_id)
+            available = int(product.stock) - int(reserved_qty)
+            if available < qty:
+                raise ValueError(f"insufficient_available_stock:{pid}:{available}:{qty}")
+
+        # Create reservations
+        for pid, qty in merged.items():
+            db.add(
+                StockReservation(
+                    order_id=order_id,
+                    user_id=user_id,
+                    product_id=pid,
+                    quantity=qty,
+                    expires_at=reserved_until,
+                )
+            )
+
+        db.commit()
+        return reserved_until
+    except Exception:
+        db.rollback()
+        raise
+
+
+def release_reservations(db: Session, *, order_id: int) -> int:
+    now = dt.datetime.now(dt.timezone.utc)
+    # Purge expired too
+    db.query(StockReservation).filter(StockReservation.expires_at <= now).delete(synchronize_session=False)
+    q = db.query(StockReservation).filter(StockReservation.order_id == order_id)
+    deleted = q.delete(synchronize_session=False)
+    db.commit()
+    return int(deleted or 0)
+
+
+def commit_reservations_and_decrease_stock(db: Session, *, order_id: int, items: list[dict[str, Any]]) -> None:
+    """Decrease stock for items and remove reservations for this order.
+
+    This is called when payment is successful.
+    """
+    # Decrease stock (locks product rows)
+    decrease_stock_batch(db, items)
+
+    # Remove reservations for the order (best-effort)
+    db.query(StockReservation).filter(StockReservation.order_id == order_id).delete(synchronize_session=False)
+    db.commit()

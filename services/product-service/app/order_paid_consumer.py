@@ -4,7 +4,7 @@ import datetime as dt
 from typing import Dict, Any, List
 
 from .database import SessionLocal
-from .crud import decrease_stock_batch
+from .crud import commit_reservations_and_decrease_stock
 from .messaging import publish_event, start_consumer_in_thread
 
 
@@ -25,8 +25,8 @@ def _handle_order_paid(payload: Dict[str, Any]) -> None:
 
     db = SessionLocal()
     try:
-        # Decrement stock for all items in ONE transaction
-        decrease_stock_batch(db, items)
+        # Decrement stock and clear any active reservations for this order
+        commit_reservations_and_decrease_stock(db, order_id=int(order_id), items=items)
 
         # Emit: stock.decremented (optional)
         publish_event(
