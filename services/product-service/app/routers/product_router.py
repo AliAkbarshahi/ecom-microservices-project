@@ -1,10 +1,11 @@
 from fastapi import APIRouter, Depends, HTTPException, Query, Form
 from sqlalchemy.orm import Session
+from sqlalchemy.exc import IntegrityError
 from typing import Optional, Dict
 from ..database import get_db
 from ..crud import create_product, get_product, get_products, update_product, delete_product
 from ..schemas import ProductOut
-from ..auth import get_current_user, get_current_admin
+from ..auth import  get_current_admin
 
 router = APIRouter(prefix="/products", tags=["Product Service"])
 
@@ -25,7 +26,18 @@ def Create_Products_Only_Admin(
         "stock": stock,
         "category": category
     }
-    return create_product(db, product_data)
+    try:
+        return create_product(db, product_data)
+    except ValueError as e:
+        if str(e) == "duplicate_product_name":
+            raise HTTPException(status_code=409, detail="Product name already exists")
+        if str(e) == "name_required":
+            raise HTTPException(status_code=400, detail="Product name is required")
+        raise HTTPException(status_code=400, detail=str(e))
+    except IntegrityError:
+        # DB-level unique constraint (race conditions)
+        db.rollback()
+        raise HTTPException(status_code=409, detail="Product name already exists")
 
 
 @router.get("/", response_model=list[ProductOut])
@@ -71,7 +83,17 @@ def Update_Product_Only_Admin(
     }
     update_data = {k: v for k, v in update_data.items() if v is not None}
     
-    product = update_product(db, product_id, update_data)
+    try:
+        product = update_product(db, product_id, update_data)
+    except ValueError as e:
+        if str(e) == "duplicate_product_name":
+            raise HTTPException(status_code=409, detail="Product name already exists")
+        if str(e) == "name_required":
+            raise HTTPException(status_code=400, detail="Product name is required")
+        raise HTTPException(status_code=400, detail=str(e))
+    except IntegrityError:
+        db.rollback()
+        raise HTTPException(status_code=409, detail="Product name already exists")
     if not product:
         raise HTTPException(status_code=404, detail="Product not found")
     return product

@@ -1,9 +1,32 @@
 from sqlalchemy.orm import Session
-from sqlalchemy import or_
+from sqlalchemy import or_, func
 from .models import Product
 
+def get_product_by_name(db: Session, name: str):
+    normalized = (name or "").strip()
+    if not normalized:
+        return None
+    return (
+        db.query(Product)
+        .filter(func.lower(Product.name) == normalized.lower())
+        .first()
+    )
+
 def create_product(db: Session, product_data: dict):
-    db_product = Product(**product_data)
+    # Enforce unique product name (case-insensitive)
+    name = (product_data.get("name") or "").strip()
+    if not name:
+        raise ValueError("name_required")
+
+    existing = (
+        db.query(Product)
+        .filter(func.lower(Product.name) == name.lower())
+        .first()
+    )
+    if existing:
+        raise ValueError("duplicate_product_name")
+
+    db_product = Product(**{**product_data, "name": name})
     db.add(db_product)
     db.commit()
     db.refresh(db_product)
@@ -29,6 +52,22 @@ def update_product(db: Session, product_id: int, update_data: dict):
     db_product = get_product(db, product_id)
     if not db_product:
         return None
+
+    # Enforce unique name on rename (case-insensitive)
+    if "name" in update_data and update_data.get("name") is not None:
+        new_name = str(update_data["name"]).strip()
+        if not new_name:
+            raise ValueError("name_required")
+        existing = (
+            db.query(Product)
+            .filter(func.lower(Product.name) == new_name.lower())
+            .filter(Product.id != product_id)
+            .first()
+        )
+        if existing:
+            raise ValueError("duplicate_product_name")
+        update_data["name"] = new_name
+
     for key, value in update_data.items():
         if value is not None:
             setattr(db_product, key, value)

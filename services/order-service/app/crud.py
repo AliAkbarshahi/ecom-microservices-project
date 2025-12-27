@@ -1,7 +1,7 @@
 from sqlalchemy.orm import Session
 from decimal import Decimal
 from .models import Order, OrderItem
-from typing import List, Optional
+from typing import List, Optional,Dict
 
 def create_order(db: Session, user_id: int, items_data: List[dict]) -> Order:
    
@@ -94,3 +94,58 @@ def get_order_count(db: Session) -> int:
 def get_user_order_count(db: Session, user_id: int) -> int:
     
     return db.query(Order).filter(Order.user_id == user_id).count()
+
+
+def get_active_cart_by_user(db: Session, user_id: int) -> Optional[Order]:
+
+    return (
+        db.query(Order)
+        .filter(
+            Order.user_id == user_id,
+            Order.status == "pending",
+            Order.payment_status.is_(False),
+        )
+        .order_by(Order.id.desc())
+        .first()
+    )
+def recalc_order_total(db_order: Order) -> None:
+    db_order.total_amount = sum(
+        (Decimal(str(item.price)) * item.quantity) for item in (db_order.items or [])
+    )
+
+def upsert_cart_items(db: Session, db_order: Order, items_data: List[Dict]) -> Order:
+  
+    existing_by_product_id = {item.product_id: item for item in (db_order.items or [])}
+
+    for item in items_data:
+        pid = int(item["product_id"])
+        qty = int(item["quantity"])
+
+        if qty == 0:
+            existing = existing_by_product_id.get(pid)
+            if existing is not None:
+                db.delete(existing)
+            continue
+
+        existing = existing_by_product_id.get(pid)
+        if existing is None:
+            db.add(
+                OrderItem(
+                    order_id=db_order.id,
+                    product_id=pid,
+                    product_name=item["product_name"],
+                    quantity=qty,
+                    price=item["price"],
+                )
+            )
+        else:
+            existing.product_name = item["product_name"]
+            existing.quantity = qty
+            existing.price = item["price"]
+
+    db.flush()
+    db.refresh(db_order)
+    recalc_order_total(db_order)
+    db.commit()
+    db.refresh(db_order)
+    return db_order
