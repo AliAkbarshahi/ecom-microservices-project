@@ -50,7 +50,7 @@ def _get_checkout_order_id_for_user(token: str) -> dict:
 
 @app.post("/payments/succeed")
 def succeed_payment_me(
-   # body: PaymentSucceedRequest | None = None,
+    body: PaymentSucceedRequest | None = None,
     current_user: dict = Depends(get_current_user),
 ):
     """Publish payment.succeeded for the authenticated user's active checkout.
@@ -65,6 +65,8 @@ def succeed_payment_me(
         "event": "payment.succeeded",
         "occurred_at": dt.datetime.utcnow().isoformat() + "Z",
         "order_id": order_id,
+        "user_id": current_user.get("id"),
+        "user_email": current_user.get("email"),
         "amount": (body.amount if (body and body.amount is not None) else checkout.get("total_amount")),
         "payment_id": body.payment_id if body else None,
     }
@@ -86,6 +88,8 @@ def fail_payment_me(
         "event": "payment.failed",
         "occurred_at": dt.datetime.utcnow().isoformat() + "Z",
         "order_id": order_id,
+        "user_id": current_user.get("id"),
+        "user_email": current_user.get("email"),
     }
     publish_event("payment.failed", payload)
     return {"status": "published", "event": payload}

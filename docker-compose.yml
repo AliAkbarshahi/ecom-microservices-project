@@ -152,6 +152,14 @@ services:
       RABBITMQ_DEFAULT_PASS: admin123
     restart: unless-stopped
 
+  mailhog:
+    image: mailhog/mailhog
+    container_name: mailhog
+    ports:
+      - "1025:1025"     # SMTP
+      - "8025:8025"     # Web UI
+    restart: unless-stopped
+
   payment-service:
     build: ./services/payment-service
     container_name: payment-service
@@ -208,6 +216,26 @@ services:
       - product-service
       - rabbitmq
       - payment-service
+    restart: unless-stopped
+
+  notification-service:
+    build: ./services/notification-service
+    container_name: notification-service
+    environment:
+      - RABBITMQ_URL=amqp://admin:admin123@rabbitmq:5672/
+      - EVENTS_EXCHANGE=ecom.events
+      - SMTP_HOST=mailhog
+      - SMTP_PORT=1025
+      - SMTP_FROM=no-reply@example.com
+      # If user email is missing, send to this address
+      - NOTIFY_FALLBACK_TO=test@example.com
+      # Optional: force all emails to one address for testing
+      # - NOTIFY_FORCE_TO=you@example.com
+    ports:
+      - "8004:8000"
+    depends_on:
+      - rabbitmq
+      - mailhog
     restart: unless-stopped
 
 volumes:

@@ -342,9 +342,7 @@ def delete_cart_item(
     return None
 
 
-# -----------------------------
 # Checkout (reserve inventory + go to payment)
-# -----------------------------
 
 
 def _parse_iso_z(value: str) -> dt.datetime:
