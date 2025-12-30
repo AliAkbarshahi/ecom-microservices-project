@@ -342,7 +342,9 @@ def delete_cart_item(
     return None
 
 
+# -----------------------------
 # Checkout (reserve inventory + go to payment)
+# -----------------------------
 
 
 def _parse_iso_z(value: str) -> dt.datetime:
@@ -463,32 +465,32 @@ def get_my_checkout(
         ),
     }
 
-# @router.patch("/{order_id:int}/status", response_model=schemas.OrderOut)
-# def update_order_status(
-#     order_id: int,
-#     status_update: schemas.OrderUpdate,
-#     db: Session = Depends(get_db)
-# ):
+@router.patch("/{order_id:int}/status", response_model=schemas.OrderOut)
+def update_order_status(
+    order_id: int,
+    status_update: schemas.OrderUpdate,
+    db: Session = Depends(get_db)
+):
     
-#     if status_update.status is None:
-#         raise HTTPException(
-#             status_code=status.HTTP_400_BAD_REQUEST,
-#             detail="'status' is required",
-#         )
+    if status_update.status is None:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="'status' is required",
+        )
 
-#     db_order = crud.update_order_status(
-#         db=db,
-#         order_id=order_id,
-#         new_status=status_update.status.value,
-#     )
+    db_order = crud.update_order_status(
+        db=db,
+        order_id=order_id,
+        new_status=status_update.status.value,
+    )
     
-#     if not db_order:
-#         raise HTTPException(
-#             status_code=status.HTTP_404_NOT_FOUND,
-#             detail=f"Order with id {order_id} not found"
-#         )
+    if not db_order:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Order with id {order_id} not found"
+        )
     
-#     return db_order
+    return db_order
 
 
 @router.delete("/{order_id:int}", status_code=status.HTTP_204_NO_CONTENT)
